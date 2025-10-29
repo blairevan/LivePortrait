@@ -103,7 +103,21 @@ def dct2device(dct: dict, device):
         if isinstance(dct[key], torch.Tensor):
             dct[key] = dct[key].to(device)
         else:
-            dct[key] = torch.tensor(dct[key]).to(device)
+            # 处理 numpy object 数组
+            if hasattr(dct[key], 'dtype') and dct[key].dtype == np.object_:
+                # 跳过 object 类型的数组，通常包含混合类型的数据
+                continue
+            else:
+                try:
+                    # 确保数组是标准的 NumPy 数组
+                    if hasattr(dct[key], '__array__'):
+                        arr = np.asarray(dct[key])
+                        dct[key] = torch.tensor(arr, dtype=torch.float32).to(device)
+                    else:
+                        dct[key] = torch.tensor(dct[key], dtype=torch.float32).to(device)
+                except (ValueError, TypeError):
+                    # 如果转换失败，跳过这个键
+                    continue
     return dct
 
 

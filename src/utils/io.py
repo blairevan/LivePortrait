@@ -112,6 +112,19 @@ def dump(wfp, obj):
     if _suffix == "npy":
         np.save(wfp, obj)
     elif _suffix == "pkl":
-        pickle.dump(obj, open(wfp, "wb"))
+        # 确保 NumPy 数组是标准的
+        def fix_numpy_arrays(item):
+            if isinstance(item, dict):
+                return {k: fix_numpy_arrays(v) for k, v in item.items()}
+            elif isinstance(item, list):
+                return [fix_numpy_arrays(v) for v in item]
+            elif hasattr(item, '__array__') and hasattr(item, 'dtype'):
+                return np.asarray(item)
+            else:
+                return item
+
+        fixed_obj = fix_numpy_arrays(obj)
+        with open(wfp, "wb") as f:
+            pickle.dump(fixed_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         raise Exception("Unknown type: {}".format(_suffix))

@@ -97,7 +97,7 @@ class LivePortraitWrapper(object):
         else:
             raise ValueError(f'img ndim should be 3 or 4: {x.ndim}')
         x = np.clip(x, 0, 1)  # clip to 0~1
-        x = torch.from_numpy(x).permute(0, 3, 1, 2)  # 1xHxWx3 -> 1x3xHxW
+        x = torch.tensor(x, dtype=torch.float32).permute(0, 3, 1, 2)  # 1xHxWx3 -> 1x3xHxW
         x = x.to(self.device)
         return x
 
@@ -114,7 +114,7 @@ class LivePortraitWrapper(object):
 
         y = _imgs.astype(np.float32) / 255.
         y = np.clip(y, 0, 1)  # clip to 0~1
-        y = torch.from_numpy(y).permute(0, 4, 3, 1, 2)  # TxHxWx3x1 -> Tx1x3xHxW
+        y = torch.tensor(y, dtype=torch.float32).permute(0, 4, 3, 1, 2)  # TxHxWx3x1 -> Tx1x3xHxW
         y = y.to(self.device)
 
         return y
@@ -347,7 +347,7 @@ class LivePortraitWrapperAnimal(LivePortraitWrapper):
         if inference_cfg.flag_force_cpu:
             self.device = 'cpu'
         else:
-            try: 
+            try:
                 if torch.backends.mps.is_available():
                     self.device = 'mps'
                 else:
